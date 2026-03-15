@@ -34,6 +34,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 #sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
 #canvas-area{position:relative;overflow:hidden;background:var(--bg);}
 #mobile-bar{display:none;}
+/* Mobile-only UI defaults hidden on desktop */
+#drawer-overlay,#drawer{display:none;}
 
 /* HEADER */
 .logo{font-family:'Playfair Display',serif;font-size:18px;letter-spacing:0.02em;color:var(--text);}
@@ -190,6 +192,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   }
   #drawer-overlay.open{display:block;opacity:1;}
   #drawer{
+    display:flex;
     position:fixed;bottom:0;left:0;right:0;
     background:var(--bg2);border-radius:16px 16px 0 0;
     z-index:50;transform:translateY(100%);
@@ -203,7 +206,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   }
   #drawer-inner{overflow-y:auto;flex:1;padding-bottom:24px;}
   #drawer-inner .sidebar-section{padding:14px 16px;}
-  #drawer-inner #leaderboard .lb-item{padding:10px 16px;}
+  #drawer-inner #leaderboard-m .lb-item{padding:10px 16px;}
 }
 </style>
 <style>
@@ -389,7 +392,9 @@ const RAW=[
   ["Mason Purko","Addie Doggweiler","dated"],["Sarah Benjamin","Griffin Paetsch","dated"],
   ["Shea Benner","Paxton Hollingsworth","dated"],["Jack Janzow","Lyla Virden","talked"],
   ["Emory Shuman","Brody Rogers","talked"],["Emory Shuman","Paxton Hollingsworth","talked"],
-  ["Addie Doggweiler","Paxton Hollingsworth","dated"],
+  ["Addie Doggweiler","Paxton Hollingsworth","dated"],["Paola Garcia","Froy Esclusa","talked"],
+  ["Carmen Green","Trey Bunn","fucked"],["Jack Demille","Grace Scuderi","talked"],
+  ["Makailyn Lester","Jake Chenoweth","fucked"],
 ];
 
 const COLORS={dating:"#5b8af2",dated:"#f28b5b",fucked:"#c47db8",talked:"#5bc8a8"};
@@ -486,15 +491,34 @@ resize();window.addEventListener('resize',resize);
 // Pan/zoom
 let panX=0,panY=0,scale=1;
 let isPanning=false,panStart={x:0,y:0},panOrigin={x:0,y:0};
+const MIN_SCALE=0.3;
+const MAX_SCALE=3;
+const WHEEL_ZOOM_SENSITIVITY=0.0015;
+const WHEEL_DELTA_CLAMP=140;
+
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function normalizeWheelDelta(e){
+  let dy=e.deltaY;
+  // Normalize line/page wheel events to pixel-ish values.
+  if(e.deltaMode===1)dy*=16;
+  else if(e.deltaMode===2)dy*=window.innerHeight;
+  return clamp(dy,-WHEEL_DELTA_CLAMP,WHEEL_DELTA_CLAMP);
+}
 
 cvs.addEventListener('wheel',e=>{
   e.preventDefault();
   const rect=cvs.getBoundingClientRect();
   const mx=e.clientX-rect.left,my=e.clientY-rect.top;
-  const delta=e.deltaY<0?1.1:0.91;
-  const newScale=Math.max(0.3,Math.min(3,scale*delta));
-  panX=mx-(mx-panX)*(newScale/scale);
-  panY=my-(my-panY)*(newScale/scale);
+  const dy=normalizeWheelDelta(e);
+  if(Math.abs(dy)<0.01)return;
+  // Trackpad pinch can emit large wheel deltas with ctrlKey=true.
+  const sensitivity=e.ctrlKey?WHEEL_ZOOM_SENSITIVITY*0.45:WHEEL_ZOOM_SENSITIVITY;
+  const zoom=Math.exp(-dy*sensitivity);
+  const newScale=clamp(scale*zoom,MIN_SCALE,MAX_SCALE);
+  if(newScale===scale)return;
+  const ratio=newScale/scale;
+  panX=mx-(mx-panX)*ratio;
+  panY=my-(my-panY)*ratio;
   scale=newScale;
 },{passive:false});
 
