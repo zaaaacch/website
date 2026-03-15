@@ -22,15 +22,18 @@
   --fucked: #c47db8;
   --talked: #5bc8a8;
   --radius: 10px;
+  --header-h: 52px;
+  --bottombar-h: 56px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;}
 
-/* LAYOUT */
-#app{display:grid;grid-template-columns:280px 1fr;grid-template-rows:56px 1fr;height:100vh;}
+/* ── DESKTOP LAYOUT ── */
+#app{display:grid;grid-template-columns:280px 1fr;grid-template-rows:var(--header-h) 1fr;height:100vh;}
 #header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px 0 24px;border-bottom:1px solid var(--border);background:var(--bg);z-index:10;}
 #sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
 #canvas-area{position:relative;overflow:hidden;background:var(--bg);}
+#mobile-bar{display:none;}
 
 /* HEADER */
 .logo{font-family:'Playfair Display',serif;font-size:18px;letter-spacing:0.02em;color:var(--text);}
@@ -43,6 +46,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .btn{background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .15s;}
 .btn:hover{border-color:var(--accent2);color:var(--text);}
 .btn.active{border-color:var(--accent);color:var(--accent);}
+#btn-menu{display:none;}
 
 /* SIDEBAR */
 .sidebar-section{padding:16px;border-bottom:1px solid var(--border);}
@@ -81,8 +85,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 /* CANVAS */
 #cvs{position:absolute;top:0;left:0;width:100%;height:100%;}
 
-/* PROFILE PANEL */
-#profile{position:absolute;top:16px;right:16px;width:260px;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:20px;opacity:0;transform:translateX(20px);transition:all .25s;pointer-events:none;}
+/* PROFILE PANEL — desktop */
+#profile{position:absolute;top:16px;right:16px;width:260px;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:20px;opacity:0;transform:translateX(20px);transition:all .25s;pointer-events:none;z-index:30;}
 #profile.visible{opacity:1;transform:translateX(0);pointer-events:all;}
 .profile-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;font-style:italic;margin-bottom:14px;border:1px solid var(--border2);}
 .profile-name{font-family:'Playfair Display',serif;font-size:17px;margin-bottom:4px;}
@@ -110,12 +114,97 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 #pathfinder input::placeholder{color:var(--muted);}
 #path-result{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sep{color:var(--muted);}
-
-/* MINIMAP overlay hint */
 #hint{position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--muted);letter-spacing:0.04em;}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .fade-in{animation:fadeIn .3s ease forwards;}
+
+/* ═══════════════════════════════════
+   MOBILE  (≤ 680px)
+═══════════════════════════════════ */
+@media(max-width:680px){
+  /* Full-screen canvas, no sidebar column */
+  #app{
+    grid-template-columns:1fr;
+    grid-template-rows:var(--header-h) 1fr var(--bottombar-h);
+  }
+  #sidebar{display:none;}
+  #hint{display:none;}
+
+  /* Slim header: logo + menu icon only */
+  #header{padding:0 14px;}
+  .header-stats{display:none;}
+  .header-controls .btn:not(#btn-menu):not(#btn-physics){display:none;}
+  #btn-menu{display:flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;font-size:18px;}
+
+  /* Bottom nav bar */
+  #mobile-bar{
+    display:flex;align-items:center;justify-content:space-around;
+    background:var(--bg2);border-top:1px solid var(--border);
+    padding:0 8px;z-index:20;
+  }
+  .mbar-btn{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;
+    font-size:10px;letter-spacing:0.04em;padding:8px 12px;cursor:pointer;
+    transition:color .15s;flex:1;
+  }
+  .mbar-btn.active{color:var(--accent);}
+  .mbar-btn svg{width:20px;height:20px;stroke-width:1.5;}
+
+  /* Pathfinder — full width above bottom bar */
+  #pathfinder{
+    bottom:calc(var(--bottombar-h) + 8px);
+    left:12px;right:12px;
+    transform:none;
+    flex-wrap:wrap;gap:8px;
+    padding:10px 12px;
+  }
+  #pathfinder input{width:calc(50% - 20px);font-size:14px;}
+  #path-result{width:100%;max-width:100%;}
+
+  /* Profile panel — full-width bottom sheet on mobile */
+  #profile{
+    top:auto;right:0;left:0;bottom:0;
+    width:100%;
+    border-radius:16px 16px 0 0;
+    transform:translateY(30px);
+    max-height:75vh;
+    overflow-y:auto;
+    padding:20px 20px 32px;
+  }
+  #profile.visible{transform:translateY(0);}
+  .conn-list{max-height:none;}
+
+  /* Sheet drag handle */
+  #profile::before{
+    content:'';display:block;width:36px;height:4px;
+    background:var(--border2);border-radius:2px;
+    margin:0 auto 16px;
+  }
+
+  /* Drawer overlay + sheet */
+  #drawer-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+    z-index:40;opacity:0;transition:opacity .25s;
+  }
+  #drawer-overlay.open{display:block;opacity:1;}
+  #drawer{
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg2);border-radius:16px 16px 0 0;
+    z-index:50;transform:translateY(100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    max-height:82vh;display:flex;flex-direction:column;
+  }
+  #drawer.open{transform:translateY(0);}
+  #drawer-handle{
+    width:36px;height:4px;background:var(--border2);
+    border-radius:2px;margin:14px auto 10px;flex-shrink:0;
+  }
+  #drawer-inner{overflow-y:auto;flex:1;padding-bottom:24px;}
+  #drawer-inner .sidebar-section{padding:14px 16px;}
+  #drawer-inner #leaderboard .lb-item{padding:10px 16px;}
+}
 </style>
 <style>
 #gate{position:fixed;inset:0;background:#0d0d0f;z-index:999;display:flex;align-items:center;justify-content:center;transition:opacity .4s;}
@@ -163,6 +252,29 @@ function checkPw(){
   }
 }
 </script>
+<div id="drawer-overlay" onclick="closeDrawer()"></div>
+<div id="drawer">
+  <div id="drawer-handle"></div>
+  <div id="drawer-inner">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Search</div>
+      <input id="search-input-m" type="text" class="search-input-shared" placeholder="Find someone..." oninput="onSearch(this.value)" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;padding:8px 12px;border-radius:var(--radius);outline:none;">
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Filter by type</div>
+      <div class="filter-pills">
+        <div class="pill active" data-type="dating" onclick="toggleFilter('dating')"><div class="pill-dot" style="background:#5b8af2"></div>Dating</div>
+        <div class="pill active" data-type="dated" onclick="toggleFilter('dated')"><div class="pill-dot" style="background:#f28b5b"></div>Dated</div>
+        <div class="pill active" data-type="fucked" onclick="toggleFilter('fucked')"><div class="pill-dot" style="background:#c47db8"></div>Hooked up</div>
+        <div class="pill active" data-type="talked" onclick="toggleFilter('talked')"><div class="pill-dot" style="background:#5bc8a8"></div>Talked</div>
+      </div>
+    </div>
+    <div class="sidebar-section" style="padding-bottom:8px;">
+      <div class="sidebar-title">Most connected</div>
+    </div>
+    <div id="leaderboard-m"></div>
+  </div>
+</div>
 <div id="app" style="visibility:hidden;">
   <header id="header">
     <div class="logo">The <span>Web</span></div>
@@ -175,6 +287,9 @@ function checkPw(){
     <div class="header-controls">
       <button class="btn active" id="btn-physics" onclick="togglePhysics()">Physics on</button>
       <button class="btn" onclick="resetLayout()">Reset</button>
+      <button class="btn" id="btn-menu" onclick="openDrawer()" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px;vertical-align:middle"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+      </button>
     </div>
   </header>
 
@@ -223,6 +338,24 @@ function checkPw(){
     </div>
     <div id="hint">scroll to zoom · drag to pan · click node</div>
   </main>
+  <nav id="mobile-bar">
+    <button class="mbar-btn" onclick="openDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+      Menu
+    </button>
+    <button class="mbar-btn" onclick="resetLayout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+      Reset
+    </button>
+    <button class="mbar-btn active" id="mbar-physics" onclick="togglePhysics()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      Physics
+    </button>
+    <button class="mbar-btn" onclick="closeProfile()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Profile
+    </button>
+  </nav>
 </div>
 
 <script>
@@ -398,7 +531,7 @@ function buildLeaderboard(){
   const sorted=[...nameArr.map((n,i)=>({n,i,d:degree[i]}))].sort((a,b)=>b.d-a.d).slice(0,15);
   const maxD=sorted[0].d;
   const lb=document.getElementById('leaderboard');
-  lb.innerHTML=sorted.map((item,rank)=>`
+  const html=sorted.map((item,rank)=>`
     <div class="lb-item${selectedNode===item.i?' selected':''}" onclick="openProfile(${item.i})" id="lb-${item.i}">
       <div class="lb-rank">${rank+1}</div>
       <div class="lb-name">${item.n}</div>
@@ -406,6 +539,9 @@ function buildLeaderboard(){
       <div class="lb-count">${item.d}</div>
     </div>
   `).join('');
+  lb.innerHTML=html;
+  const lbM=document.getElementById('leaderboard-m');
+  if(lbM) lbM.innerHTML=html;
 }
 buildLeaderboard();
 
@@ -551,6 +687,8 @@ function togglePhysics(){
   const btn=document.getElementById('btn-physics');
   btn.textContent=physicsOn?'Physics on':'Physics off';
   btn.classList.toggle('active',physicsOn);
+  const mBtn=document.getElementById('mbar-physics');
+  if(mBtn) mBtn.classList.toggle('active',physicsOn);
 }
 function resetLayout(){
   nodes.forEach(n=>{n.x=Math.random()*W*0.8+W*0.1;n.y=Math.random()*H*0.8+H*0.1;n.vx=0;n.vy=0;});
@@ -693,31 +831,102 @@ cvs.addEventListener('mouseup',e=>{
 });
 cvs.addEventListener('mouseleave',()=>{dragNode=null;isPanning=false;tip.style.opacity='0';hoveredNode=-1;});
 
-// Touch
+// ── Touch: drag nodes, pan canvas, pinch-to-zoom ──
 let touchDrag=null,touchDragOX=0,touchDragOY=0;
+let touchPanStart=null,touchPanOrigin=null;
+let pinchStartDist=0,pinchStartScale=1,pinchStartPanX=0,pinchStartPanY=0,pinchMidStart=null;
+let touchMoved=false,touchStartPos=null;
+
+function getTouchMid(t1,t2){
+  const rect=cvs.getBoundingClientRect();
+  return{x:((t1.clientX+t2.clientX)/2)-rect.left,y:((t1.clientY+t2.clientY)/2)-rect.top};
+}
+function getTouchDist(t1,t2){
+  return Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
+}
+
 cvs.addEventListener('touchstart',e=>{
   e.preventDefault();
-  const t=e.touches[0],rect=cvs.getBoundingClientRect();
-  const mx=t.clientX-rect.left,my=t.clientY-rect.top;
-  const hi=hitTest(mx,my);
-  if(hi>=0){
-    touchDrag=hi;
-    const pos=fromScreen(mx,my);
-    touchDragOX=pos.x-nodes[hi].x;touchDragOY=pos.y-nodes[hi].y;
+  touchMoved=false;
+  if(e.touches.length===1){
+    const t=e.touches[0],rect=cvs.getBoundingClientRect();
+    const mx=t.clientX-rect.left,my=t.clientY-rect.top;
+    touchStartPos={x:mx,y:my};
+    const hi=hitTest(mx,my);
+    if(hi>=0){
+      touchDrag=hi;touchPanStart=null;
+      const pos=fromScreen(mx,my);
+      touchDragOX=pos.x-nodes[hi].x;touchDragOY=pos.y-nodes[hi].y;
+    }else{
+      touchPanStart={x:t.clientX,y:t.clientY};
+      touchPanOrigin={x:panX,y:panY};
+      touchDrag=null;
+    }
+  } else if(e.touches.length===2){
+    touchDrag=null;touchPanStart=null;
+    pinchStartDist=getTouchDist(e.touches[0],e.touches[1]);
+    pinchStartScale=scale;
+    pinchMidStart=getTouchMid(e.touches[0],e.touches[1]);
+    pinchStartPanX=panX;pinchStartPanY=panY;
   }
 },{passive:false});
+
 cvs.addEventListener('touchmove',e=>{
   e.preventDefault();
-  const t=e.touches[0],rect=cvs.getBoundingClientRect();
-  const mx=t.clientX-rect.left,my=t.clientY-rect.top;
-  if(touchDrag!==null){
-    const pos=fromScreen(mx,my);
-    nodes[touchDrag].x=pos.x-touchDragOX;nodes[touchDrag].y=pos.y-touchDragOY;
+  if(e.touches.length===2){
+    // Pinch zoom
+    const newDist=getTouchDist(e.touches[0],e.touches[1]);
+    const newScale=Math.max(0.25,Math.min(4,pinchStartScale*(newDist/pinchStartDist)));
+    const mid=getTouchMid(e.touches[0],e.touches[1]);
+    panX=mid.x-(pinchMidStart.x-pinchStartPanX)*(newScale/pinchStartScale)-(mid.x-pinchMidStart.x+pinchMidStart.x)*(newScale/pinchStartScale)+pinchMidStart.x*(newScale/pinchStartScale)-pinchMidStart.x*(pinchStartScale/pinchStartScale);
+    // simpler correct formula:
+    panX=pinchStartPanX+(mid.x-pinchMidStart.x)+(pinchMidStart.x*(1-newScale/pinchStartScale));
+    panY=pinchStartPanY+(mid.y-pinchMidStart.y)+(pinchMidStart.y*(1-newScale/pinchStartScale));
+    scale=newScale;
+    touchMoved=true;
+    return;
+  }
+  if(e.touches.length===1){
+    const t=e.touches[0],rect=cvs.getBoundingClientRect();
+    const mx=t.clientX-rect.left,my=t.clientY-rect.top;
+    if(touchStartPos&&Math.hypot(mx-touchStartPos.x,my-touchStartPos.y)>4) touchMoved=true;
+    if(touchDrag!==null){
+      const pos=fromScreen(mx,my);
+      nodes[touchDrag].x=pos.x-touchDragOX;nodes[touchDrag].y=pos.y-touchDragOY;
+      nodes[touchDrag].vx=0;nodes[touchDrag].vy=0;
+    } else if(touchPanStart){
+      panX=touchPanOrigin.x+(t.clientX-touchPanStart.x);
+      panY=touchPanOrigin.y+(t.clientY-touchPanStart.y);
+    }
   }
 },{passive:false});
+
 cvs.addEventListener('touchend',e=>{
-  if(touchDrag!==null){openProfile(touchDrag);}
-  touchDrag=null;
+  if(e.touches.length===0){
+    if(touchDrag!==null&&!touchMoved){openProfile(touchDrag);}
+    touchDrag=null;touchPanStart=null;
+  }
+});
+
+// ── Drawer ──
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+  // sync leaderboard into mobile drawer
+  const lbM=document.getElementById('leaderboard-m');
+  if(lbM) lbM.innerHTML=document.getElementById('leaderboard').innerHTML;
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+}
+
+// Keep desktop search and mobile search in sync
+document.getElementById('search-input').addEventListener('input',function(){onSearch(this.value);});
+const mSearch=document.getElementById('search-input-m');
+if(mSearch) mSearch.addEventListener('input',function(){
+  onSearch(this.value);
+  document.getElementById('search-input').value=this.value;
 });
 
 // Loop
